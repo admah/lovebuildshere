@@ -47,7 +47,7 @@ class Layout extends React.Component {
             }}
             to={'/'}
           >
-            Gatsby Starter Blog
+            Love Builds Here
           </Link>
         </h3>
       )
