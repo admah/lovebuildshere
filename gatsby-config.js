@@ -6,7 +6,6 @@ module.exports = {
       'Helpful parenting tips, house projects, and anything else along the way that helps us grow to love more.',
     siteUrl: 'https://www.lovebuildshere.com/',
   },
-  pathPrefix: '/lovebuildshere',
   plugins: [
     {
       resolve: `gatsby-source-filesystem`,

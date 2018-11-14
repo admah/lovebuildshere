@@ -20,6 +20,7 @@ class Layout extends React.Component {
         >
           <Link
             style={{
+              backgroundImage: 'none',
               boxShadow: 'none',
               textDecoration: 'none',
               color: 'inherit',
@@ -34,9 +35,9 @@ class Layout extends React.Component {
       header = (
         <h3
           style={{
-            fontFamily: 'Montserrat, sans-serif',
+            backgroundImage: 'none',
             marginTop: 0,
-            marginBottom: rhythm(-1),
+            marginBottom: rhythm(-0.05),
           }}
         >
           <Link
