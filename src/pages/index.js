@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Link, graphql } from 'gatsby'
 import get from 'lodash/get'
 import Helmet from 'react-helmet'
@@ -14,7 +15,9 @@ class BlogIndex extends React.Component {
       this,
       'props.data.site.siteMetadata.description'
     )
-    const posts = get(this, 'props.data.allMarkdownRemark.edges')
+    const posts = get(this, 'props.data.allContentfulPost.edges')
+
+    console.log(this.props)
 
     return (
       <React.Fragment>
@@ -32,21 +35,24 @@ class BlogIndex extends React.Component {
             meta={[{ name: 'description', content: siteDescription }]}
             title={siteTitle}
           />
-          {posts.map(({ node }) => {
-            const title = get(node, 'frontmatter.title') || node.fields.slug
+          {posts.map(({ node }, index) => {
+            const title = get(node, 'title')
+            const excerpt = get(node, 'excerpt.excerpt')
             return (
-              <div key={node.fields.slug}>
+              <div key={index}>
                 <h3
                   style={{
                     marginBottom: rhythm(1 / 4),
                   }}
                 >
-                  <Link style={{ boxShadow: 'none' }} to={node.fields.slug}>
+                  <Link
+                    style={{ boxShadow: 'none' }}
+                    to={`/posts/${node.slug}`}
+                  >
                     {title}
                   </Link>
                 </h3>
-                <small>{node.frontmatter.date}</small>
-                <p dangerouslySetInnerHTML={{ __html: node.excerpt }} />
+                <p dangerouslySetInnerHTML={{ __html: excerpt }} />
               </div>
             )
           })}
@@ -54,6 +60,10 @@ class BlogIndex extends React.Component {
       </React.Fragment>
     )
   }
+}
+
+BlogIndex.propTypes = {
+  data: PropTypes.object.isRequired,
 }
 
 export default BlogIndex
@@ -66,16 +76,18 @@ export const pageQuery = graphql`
         description
       }
     }
-    allMarkdownRemark(sort: { fields: [frontmatter___date], order: DESC }) {
+    allContentfulPost {
       edges {
         node {
-          excerpt
-          fields {
-            slug
+          title
+          slug
+          excerpt {
+            excerpt
           }
-          frontmatter {
-            date(formatString: "DD MMMM, YYYY")
-            title
+          body {
+            childContentfulRichText {
+              html
+            }
           }
         }
       }

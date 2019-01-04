@@ -7,62 +7,91 @@ exports.createPages = ({ graphql, actions }) => {
   const { createPage } = actions
 
   return new Promise((resolve, reject) => {
-    const blogPost = path.resolve('./src/templates/blog-post.js')
     resolve(
       graphql(
         `
           {
-            allMarkdownRemark(sort: { fields: [frontmatter___date], order: DESC }, limit: 1000) {
+            allContentfulPost(limit: 1000) {
               edges {
                 node {
-                  fields {
-                    slug
-                  }
-                  frontmatter {
-                    title
+                  title
+                  slug
+                  excerpt {
+                    excerpt
                   }
                 }
               }
             }
           }
         `
-      ).then(result => {
-        if (result.errors) {
-          console.log(result.errors)
-          reject(result.errors)
-        }
+      )
+        .then(result => {
+          if (result.errors) {
+            console.log(result.errors)
+            reject(result.errors)
+          }
 
-        // Create blog posts pages.
-        const posts = result.data.allMarkdownRemark.edges;
+          // Create blog posts pages.
+          const blogPost = path.resolve('./src/templates/blog-post.js')
+          const posts = result.data.allContentfulPost.edges
 
-        _.each(posts, (post, index) => {
-          const previous = index === posts.length - 1 ? null : posts[index + 1].node;
-          const next = index === 0 ? null : posts[index - 1].node;
+          _.each(posts, (post, index) => {
+            const previous =
+              index === posts.length - 1 ? null : posts[index + 1].node
+            const next = index === 0 ? null : posts[index - 1].node
 
-          createPage({
-            path: post.node.fields.slug,
-            component: blogPost,
-            context: {
-              slug: post.node.fields.slug,
-              previous,
-              next,
-            },
+            createPage({
+              path: `/posts/${post.node.slug}`,
+              component: blogPost,
+              context: {
+                id: post.node.slug,
+                previous,
+                next,
+              },
+            })
           })
         })
-      })
+        .then(() => {
+          graphql(
+            `
+              {
+                allContentfulCategory(limit: 1000) {
+                  edges {
+                    node {
+                      name
+                      slug
+                    }
+                  }
+                }
+              }
+            `
+          ).then(result => {
+            if (result.errors) {
+              throw result.errors
+            }
+
+            // Create Category pages
+            const categoryTemplate = path.resolve(`./src/templates/category.js`)
+            // We want to create a detailed page for each
+            // category node. We'll just use the Contentful id for the slug.
+            _.each(result.data.allContentfulCategory.edges, edge => {
+              // Gatsby uses Redux to manage its internal state.
+              // Plugins and sites can use functions like "createPage"
+              // to interact with Gatsby.
+              createPage({
+                // Each page is required to have a `path` as well
+                // as a template component. The `context` is
+                // optional but is often necessary so the template
+                // can query data specific to each page.
+                path: `/categories/${edge.node.slug}/`,
+                component: categoryTemplate,
+                context: {
+                  id: edge.node.slug,
+                },
+              })
+            })
+          })
+        })
     )
   })
-}
-
-exports.onCreateNode = ({ node, actions, getNode }) => {
-  const { createNodeField } = actions
-
-  if (node.internal.type === `MarkdownRemark`) {
-    const value = createFilePath({ node, getNode })
-    createNodeField({
-      name: `slug`,
-      node,
-      value,
-    })
-  }
 }
